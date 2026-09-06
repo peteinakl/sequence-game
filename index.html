@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0f172a">
   <title>Sequence - Single Player vs Machine</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -18,32 +21,40 @@
     <div class="scoreboard">
       <div class="score-pill">
         <span class="chip-icon blue"></span>
-        <span>You:</span>
+        <span class="score-label">You:</span>
         <span id="playerScore" class="count">0</span>
       </div>
-      <div style="color: #475569; font-weight: bold;">VS</div>
+      <div style="color: #475569; font-weight: bold; font-size: 0.75rem;">VS</div>
       <div class="score-pill">
         <span class="chip-icon red"></span>
-        <span>Machine:</span>
+        <span class="score-label">Machine:</span>
         <span id="aiScore" class="count">0</span>
       </div>
       <button id="goalToggleBtn" class="goal-toggle-btn" title="Click to toggle between 1 or 2 sequences to win">Goal: 1 Seq</button>
     </div>
 
     <div class="controls-group">
-      <button id="drawModeBtn" class="btn" title="Toggle between automatic card draw or manually clicking the deck">🎴 Draw: Auto</button>
-      <button id="muteBtn" class="btn">🔊 Sound</button>
-      <button id="rulesBtn" class="btn">📖 Rules</button>
-      <button id="restartBtn" class="btn btn-primary">↻ New Game</button>
+      <button id="drawModeBtn" class="btn" title="Toggle between automatic card draw or manually clicking the deck">
+        <span class="btn-icon">🎴</span><span class="btn-text">Auto</span>
+      </button>
+      <button id="muteBtn" class="btn" title="Toggle Sound">
+        <span class="btn-icon">🔊</span><span class="btn-text">Sound</span>
+      </button>
+      <button id="rulesBtn" class="btn" title="Rules & Help">
+        <span class="btn-icon">📖</span><span class="btn-text">Rules</span>
+      </button>
+      <button id="restartBtn" class="btn btn-primary" title="Start New Game">
+        <span class="btn-icon">↻</span><span class="btn-text">New Game</span>
+      </button>
     </div>
   </header>
 
   <!-- Turn & Guidance Banner -->
   <div id="turnBanner" class="turn-banner player-turn">
     <div id="statusText" class="status-msg">
-      <span class="pulse-dot"></span> Your Turn: Select a card from your hand below.
+      <span class="pulse-dot"></span> Your Turn: Tap a card or board square to play.
     </div>
-    <div style="font-size: 0.8rem; color: #94a3b8;">5-in-a-row to form a Sequence</div>
+    <div class="turn-sub-guide">5-in-a-row to form Sequence</div>
   </div>
 
   <!-- Main Game Layout: Board + Hand on Left, Side Panel on Right -->
@@ -61,14 +72,14 @@
       <section class="hand-section">
         <div class="hand-header">
           <div class="hand-title">
-            <span>🃏 Your Hand (Blue Tokens)</span>
-            <span style="font-size: 0.75rem; color: #94a3b8; font-weight: normal;">Click a card to play, then draw next card</span>
+            <span>🃏 Your Hand</span>
+            <span class="hand-subtitle">Tap card or matching board square</span>
           </div>
 
           <!-- Persistent Jacks Guide Legend -->
           <div class="jack-legend-bar">
-            <span class="jack-legend-item two-eyed" title="Jack of Clubs or Jack of Diamonds">👀 2-Eyed (♣♦): WILD (Place Anywhere)</span>
-            <span class="jack-legend-item one-eyed" title="Jack of Spades or Jack of Hearts">👁️ 1-Eyed (♠♥): REMOVE (Clear Opponent)</span>
+            <span class="jack-legend-item two-eyed" title="Jack of Clubs or Jack of Diamonds">👀 2-Eyed: WILD</span>
+            <span class="jack-legend-item one-eyed" title="Jack of Spades or Jack of Hearts">👁️ 1-Eyed: REMOVE</span>
           </div>
         </div>
 
@@ -85,7 +96,7 @@
     <!-- Side Deck & Activity Logs -->
     <aside class="side-panel">
       <!-- Deck & Discard Card Box -->
-      <div class="card-box">
+      <div class="card-box piles-box">
         <div class="card-box-title">
           <span>Card Piles</span>
           <span id="deckCount" style="color: #60a5fa; font-weight: normal; font-size: 0.75rem;">104 left</span>
@@ -113,9 +124,12 @@
         </div>
       </div>
 
-      <!-- Action Log -->
-      <div class="card-box log-box">
-        <div class="card-box-title">Game Activity</div>
+      <!-- Action Log with Mobile Accordion Toggle -->
+      <div id="logCardBox" class="card-box log-box">
+        <div id="logToggleTitle" class="card-box-title log-accordion-header" title="Tap to toggle Activity Log">
+          <span>Game Activity</span>
+          <span id="logToggleIcon" class="log-toggle-icon">▾</span>
+        </div>
         <div id="logContent" class="log-content"></div>
       </div>
     </aside>

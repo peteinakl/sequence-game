@@ -30,6 +30,9 @@ const SoundEngine = (() => {
   }
 
   return {
+    unlock() {
+      initCtx();
+    },
     toggleMute() {
       muted = !muted;
       return muted;
@@ -157,9 +160,37 @@ class SequenceGame {
     this.render();
   }
 
+  findMatchingHandCard(r, c) {
+    let wildIndex = -1;
+    for (let i = 0; i < this.playerHand.length; i++) {
+      const cardCode = this.playerHand[i];
+      if (!cardCode) continue;
+      const moves = getValidMovesForCard(cardCode, this.boardState, 'blue');
+      const match = moves.find(m => m.r === r && m.c === c);
+      if (match) {
+        const parsed = parseCard(cardCode);
+        if (parsed.isTwoEyed) {
+          if (wildIndex === -1) wildIndex = i;
+        } else {
+          return i; // Prefer standard card match over using wild Jack
+        }
+      }
+    }
+    return wildIndex;
+  }
+
   handleCellClick(r, c) {
     if (this.currentTurn !== 'player' || this.isGameOver || this.isAiThinking) return;
-    if (this.selectedCardIndex === null) return;
+
+    if (this.selectedCardIndex === null) {
+      // Mobile Smart Tap: Check if player holds a card that can be played at this spot
+      const matchIdx = this.findMatchingHandCard(r, c);
+      if (matchIdx !== -1) {
+        this.selectPlayerCard(matchIdx);
+        SoundEngine.cardDraw();
+      }
+      return;
+    }
 
     const cardCode = this.playerHand[this.selectedCardIndex];
     if (!cardCode) return;
@@ -167,7 +198,15 @@ class SequenceGame {
     const validMoves = getValidMovesForCard(cardCode, this.boardState, 'blue');
     const move = validMoves.find(m => m.r === r && m.c === c);
 
-    if (!move) return;
+    if (!move) {
+      // If cell isn't valid for current card, check if player tapped a spot valid for another card in hand
+      const altIdx = this.findMatchingHandCard(r, c);
+      if (altIdx !== -1 && altIdx !== this.selectedCardIndex) {
+        this.selectPlayerCard(altIdx);
+        SoundEngine.cardDraw();
+      }
+      return;
+    }
 
     this.executeMove('player', this.selectedCardIndex, move);
   }
@@ -376,7 +415,14 @@ class SequenceGame {
     if (pScore) pScore.textContent = this.playerSequences.length;
     if (aScore) aScore.textContent = this.aiSequences.length;
     if (goalBtn) goalBtn.textContent = `Goal: ${this.targetSequences} Seq`;
-    if (drawModeBtn) drawModeBtn.textContent = `🎴 Draw: ${this.drawMode === 'auto' ? 'Auto' : 'Manual'}`;
+    if (drawModeBtn) {
+      const textSpan = drawModeBtn.querySelector('.btn-text');
+      if (textSpan) {
+        textSpan.textContent = this.drawMode === 'auto' ? 'Auto' : 'Manual';
+      } else {
+        drawModeBtn.textContent = `🎴 Draw: ${this.drawMode === 'auto' ? 'Auto' : 'Manual'}`;
+      }
+    }
     if (deckCount) deckCount.textContent = `${this.deck.length} left`;
 
     // Turn banner status
@@ -609,8 +655,8 @@ class SequenceGame {
           </div>
         `;
 
-        cardEl.addEventListener('click', (e) => {
-          if (isDead && e.target.classList.contains('badge-dead')) {
+        cardEl.addEventListener('click', () => {
+          if (isDead) {
             this.swapDeadCard('player', index);
           } else {
             this.selectPlayerCard(index);
@@ -706,9 +752,37 @@ function initApp() {
   if (muteBtn) {
     muteBtn.addEventListener('click', () => {
       const isMuted = SoundEngine.toggleMute();
-      muteBtn.textContent = isMuted ? '🔇 Muted' : '🔊 Sound';
+      const textSpan = muteBtn.querySelector('.btn-text');
+      const iconSpan = muteBtn.querySelector('.btn-icon');
+      if (textSpan && iconSpan) {
+        iconSpan.textContent = isMuted ? '🔇' : '🔊';
+        textSpan.textContent = isMuted ? 'Muted' : 'Sound';
+      } else {
+        muteBtn.textContent = isMuted ? '🔇 Muted' : '🔊 Sound';
+      }
     });
   }
+
+  // Mobile Log Accordion Toggle
+  const logToggleTitle = document.getElementById('logToggleTitle');
+  const logCardBox = document.getElementById('logCardBox');
+  if (logToggleTitle && logCardBox) {
+    logToggleTitle.addEventListener('click', () => {
+      logCardBox.classList.toggle('collapsed');
+      const icon = document.getElementById('logToggleIcon');
+      if (icon) {
+        icon.textContent = logCardBox.classList.contains('collapsed') ? '▸' : '▾';
+      }
+    });
+  }
+
+  // Mobile Audio Unlock on first touch/click
+  const unlockAudio = () => {
+    SoundEngine.unlock();
+  };
+  ['click', 'touchstart', 'touchend'].forEach(evt => {
+    window.addEventListener(evt, unlockAudio, { once: true, passive: true });
+  });
 
   const rulesBtn = document.getElementById('rulesBtn');
   const rulesModal = document.getElementById('rulesModal');
