@@ -1440,21 +1440,6 @@ function initApp() {
       game.showCompanion("Here we go again! Let's see some good cards.");
     });
   }
-
-  // Testing simulation buttons
-  const simPlayerWinBtn = document.getElementById('simPlayerWinBtn');
-  if (simPlayerWinBtn) {
-    simPlayerWinBtn.addEventListener('click', () => {
-      if (game) game.simulateWin('player');
-    });
-  }
-
-  const simAiWinBtn = document.getElementById('simAiWinBtn');
-  if (simAiWinBtn) {
-    simAiWinBtn.addEventListener('click', () => {
-      if (game) game.simulateWin('ai');
-    });
-  }
 }
 
 window.addEventListener('DOMContentLoaded', initApp);
