@@ -531,13 +531,20 @@ class SequenceGame {
     const settings = StorageManager.getSettings();
     this.isTurbo = settings.isTurbo || false;
 
-    if (saved && !saved.isGameOver && saved.playerHand && saved.playerHand.length === 7) {
+    const isValidSaved = saved && 
+      !saved.isGameOver && 
+      Array.isArray(saved.playerHand) && saved.playerHand.length === 7 &&
+      Array.isArray(saved.aiHand) && saved.aiHand.length === 7 &&
+      Array.isArray(saved.boardState) && saved.boardState.length === 10 &&
+      Array.isArray(saved.deck);
+
+    if (isValidSaved) {
       this.boardState = saved.boardState;
       this.deck = saved.deck;
-      this.discardPile = saved.discardPile;
+      this.discardPile = saved.discardPile || [];
       this.playerHand = saved.playerHand;
       this.aiHand = saved.aiHand;
-      this.currentTurn = saved.currentTurn;
+      this.currentTurn = saved.currentTurn || 'player';
       this.selectedCardIndex = null;
       this.targetSequences = saved.targetSequences || 1;
       this.drawMode = saved.drawMode || 'auto';
