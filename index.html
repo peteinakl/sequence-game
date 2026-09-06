@@ -10,6 +10,8 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- Fullscreen Confetti Celebration Canvas -->
+  <canvas id="confettiCanvas"></canvas>
 
   <!-- Top Header Navigation & Scores -->
   <header class="header-bar">
@@ -27,9 +29,10 @@
       <div style="color: #475569; font-weight: bold; font-size: 0.75rem;">VS</div>
       <div class="score-pill">
         <span class="chip-icon red"></span>
-        <span class="score-label">Machine:</span>
+        <span class="score-label">Lucky:</span>
         <span id="aiScore" class="count">0</span>
       </div>
+      <div class="streak-pill" id="streakPill" title="Current Win Streak">🔥 <span id="streakCount">0</span></div>
       <button id="goalToggleBtn" class="goal-toggle-btn" title="Click to toggle between 1 or 2 sequences to win">Goal: 1 Seq</button>
     </div>
 
@@ -42,6 +45,9 @@
       </button>
       <button id="rulesBtn" class="btn" title="Rules & Help">
         <span class="btn-icon">📖</span><span class="btn-text">Rules</span>
+      </button>
+      <button id="settingsBtn" class="btn" title="Game Settings & Lifetime Stats">
+        <span class="btn-icon">⚙️</span><span class="btn-text">Settings</span>
       </button>
       <button id="restartBtn" class="btn btn-primary" title="Start New Game">
         <span class="btn-icon">↻</span><span class="btn-text">New Game</span>
@@ -61,6 +67,15 @@
   <main class="main-container">
     <!-- Primary Area: Gameboard + Hand directly beneath -->
     <div class="game-area">
+      <!-- Friendly Companion Reaction Bar -->
+      <div class="companion-bar" id="companionBar">
+        <div class="companion-avatar" title="Lucky, your friendly companion">🍀</div>
+        <div class="companion-bubble">
+          <span class="companion-name">Lucky</span>
+          <span id="companionMsg" class="companion-msg">"Good luck! Let's have a great match."</span>
+        </div>
+      </div>
+
       <!-- Board -->
       <section class="board-wrapper">
         <div class="board-felt-container">
@@ -176,6 +191,55 @@
       <div class="rule-section">
         <h3>🔄 Dead Cards</h3>
         <p>If both spaces on the board matching a card in your hand are already covered by chips, the card becomes <b>DEAD</b>. A dead card will display an orange badge; click it to discard and draw a replacement without losing your turn.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings & Stats Modal -->
+  <div id="settingsModal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-title">
+        <span>⚙️ Game Settings &amp; Stats</span>
+        <button id="closeSettingsBtn" class="modal-close-btn">&times;</button>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-label">🎨 Table Appearance</div>
+        <div class="settings-options">
+          <button class="setting-btn active" data-theme="light">Light (High-Vis)</button>
+          <button class="setting-btn" data-theme="classic">Vegas Felt</button>
+          <button class="setting-btn" data-theme="dark">Midnight Dark</button>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-label">⚡ AI Move Speed</div>
+        <div class="settings-options">
+          <button id="speedNormalBtn" class="setting-btn active">Standard (650ms)</button>
+          <button id="speedTurboBtn" class="setting-btn">⚡ Turbo (Instant)</button>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-label">🏆 Lifetime Statistics</div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div id="statWins" class="stat-val">0</div>
+            <div class="stat-label">Matches Won</div>
+          </div>
+          <div class="stat-card">
+            <div id="statStreak" class="stat-val">0</div>
+            <div class="stat-label">Current Streak</div>
+          </div>
+          <div class="stat-card">
+            <div id="statBestStreak" class="stat-val">0</div>
+            <div class="stat-label">Best Streak</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px;">
+        <button id="resetStatsBtn" class="btn" style="font-size: 0.75rem; color: #ef4444;">Reset Stats</button>
       </div>
     </div>
   </div>
