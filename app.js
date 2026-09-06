@@ -863,6 +863,32 @@ class SequenceGame {
     logList.scrollTop = logList.scrollHeight;
   }
 
+  simulateWin(winner) {
+    SoundEngine.unlock();
+    this.isGameOver = true;
+    this.selectedCardIndex = null;
+
+    if (winner === 'player') {
+      this.playerSequences = Array.from({ length: this.targetSequences }, (_, i) => ({ id: `sim-${i}` }));
+      StorageManager.recordWin();
+      SoundEngine.victory();
+      ConfettiEngine.launch(120);
+      this.showCompanion("GOOD TIMES! 🎉 Spectacular win! You're on fire! 🔥");
+      this.log(`🏆 [TEST SIMULATION] Player formed ${this.targetSequences} sequence(s) and won!`, 'sequence');
+    } else {
+      this.aiSequences = Array.from({ length: this.targetSequences }, (_, i) => ({ id: `sim-${i}` }));
+      StorageManager.recordLoss();
+      SoundEngine.playTone(392, 'triangle', 0.35, 0, 0.25);
+      SoundEngine.playTone(330, 'triangle', 0.45, 0.15, 0.25);
+      this.showCompanion("Good match! Care for a rematch? 🍀");
+      this.log(`🍀 [TEST SIMULATION] Lucky formed ${this.targetSequences} sequence(s) and won!`, 'ai');
+    }
+
+    StorageManager.clearMatch();
+    this.render();
+    this.showVictoryModal(winner);
+  }
+
   showVictoryModal(winner) {
     const overlay = document.getElementById('victoryOverlay');
     const title = document.getElementById('victoryTitle');
@@ -1401,6 +1427,21 @@ function initApp() {
       game.render();
       game.log("New game started! Good luck.", "system");
       game.showCompanion("Here we go again! Let's see some good cards.");
+    });
+  }
+
+  // Testing simulation buttons
+  const simPlayerWinBtn = document.getElementById('simPlayerWinBtn');
+  if (simPlayerWinBtn) {
+    simPlayerWinBtn.addEventListener('click', () => {
+      if (game) game.simulateWin('player');
+    });
+  }
+
+  const simAiWinBtn = document.getElementById('simAiWinBtn');
+  if (simAiWinBtn) {
+    simAiWinBtn.addEventListener('click', () => {
+      if (game) game.simulateWin('ai');
     });
   }
 }
