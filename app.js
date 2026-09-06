@@ -236,6 +236,7 @@ class SequenceGame {
         this.playerHand[cardIndex] = null;
         this.pendingDrawSlot = cardIndex;
         this.currentTurn = 'awaiting_draw';
+        this.updateMoveFeedback(parsed.name, "Click Draw Deck to draw replacement!");
         this.render();
       } else {
         // Auto-draw immediately
@@ -243,6 +244,7 @@ class SequenceGame {
         this.playerHand[cardIndex] = newCard;
         this.lastDrawnSlot = cardIndex;
         setTimeout(() => SoundEngine.cardDraw(), 100);
+        this.updateMoveFeedback(parsed.name, parseCard(newCard).name);
         this.log(`🃏 Discarded ${parsed.name} ➔ Drew ${parseCard(newCard).name} from deck (${this.deck.length} remaining).`, 'player');
 
         this.currentTurn = 'ai';
@@ -260,6 +262,20 @@ class SequenceGame {
     }
   }
 
+  updateMoveFeedback(discardedName, drawnName) {
+    const bar = document.getElementById('moveFeedbackBar');
+    const disc = document.getElementById('feedbackDiscard');
+    const draw = document.getElementById('feedbackDraw');
+    if (!bar) return;
+    if (discardedName) {
+      bar.style.display = 'flex';
+      if (disc) disc.innerHTML = `📤 Discarded: <b>${discardedName}</b>`;
+      if (draw) draw.innerHTML = drawnName ? `&nbsp;&nbsp;➔&nbsp;&nbsp; 📥 Drew: <b>${drawnName}</b>` : '';
+    } else {
+      bar.style.display = 'none';
+    }
+  }
+
   drawForPlayer() {
     if (this.currentTurn !== 'awaiting_draw' || this.pendingDrawSlot === null) return;
     const slot = this.pendingDrawSlot;
@@ -269,6 +285,8 @@ class SequenceGame {
     this.pendingDrawSlot = null;
     SoundEngine.cardDraw();
 
+    const discName = this.lastPlayerDiscard ? parseCard(this.lastPlayerDiscard).name : '';
+    this.updateMoveFeedback(discName, parseCard(newCard).name);
     this.log(`🃏 Drew ${parseCard(newCard).name} from deck into your hand.`, 'player');
 
     this.currentTurn = 'ai';
@@ -403,33 +421,57 @@ class SequenceGame {
       }
     }
 
-    if (playerDiscardCard) {
-      if (this.lastPlayerDiscard) {
-        const top = parseCard(this.lastPlayerDiscard);
-        playerDiscardCard.className = `discard-card recent suit-${top.color}`;
-        playerDiscardCard.innerHTML = `
-          <div style="font-weight: bold; font-size: 0.85rem;">${top.rank}</div>
-          <div style="font-size: 1.05rem; line-height: 1;">${top.symbol}</div>
-        `;
-      } else {
-        playerDiscardCard.className = 'discard-card';
-        playerDiscardCard.innerHTML = '<span style="font-size: 0.65rem; color: #94a3b8;">Empty</span>';
-      }
-    }
+    const playerDiscardName = document.getElementById('playerDiscardName');
+    const aiDiscardName = document.getElementById('aiDiscardName');
 
-    if (aiDiscardCard) {
-      if (this.lastAiDiscard) {
-        const top = parseCard(this.lastAiDiscard);
-        aiDiscardCard.className = `discard-card recent suit-${top.color}`;
-        aiDiscardCard.innerHTML = `
-          <div style="font-weight: bold; font-size: 0.85rem;">${top.rank}</div>
-          <div style="font-size: 1.05rem; line-height: 1;">${top.symbol}</div>
+    const updateDiscardDisplay = (cardCode, cardEl, nameEl) => {
+      if (!cardEl) return;
+      if (cardCode) {
+        const card = parseCard(cardCode);
+        cardEl.className = `discard-card recent ${card.color === 'red' ? 'suit-red' : 'suit-black'}`;
+        let centerHtml = `<div style="font-size: 1.3rem; line-height: 1; align-self: center;">${card.symbol}</div>`;
+        let eyeBadge = '';
+
+        if (card.isTwoEyed) {
+          eyeBadge = '<div style="position: absolute; top: -6px; right: -4px; background: #10b981; color: white; border-radius: 4px; padding: 1px 4px; font-size: 0.55rem; font-weight: 800;">👀 WILD</div>';
+          centerHtml = `
+            <div style="display: flex; flex-direction: column; align-items: center; line-height: 1;">
+              <span style="font-size: 1.1rem;">👀</span>
+              <span style="font-size: 0.85rem; line-height: 1;">${card.symbol}</span>
+            </div>
+          `;
+        } else if (card.isOneEyed) {
+          eyeBadge = '<div style="position: absolute; top: -6px; right: -4px; background: #ef4444; color: white; border-radius: 4px; padding: 1px 4px; font-size: 0.55rem; font-weight: 800;">👁️ REMOVE</div>';
+          centerHtml = `
+            <div style="display: flex; flex-direction: column; align-items: center; line-height: 1;">
+              <span style="font-size: 1.1rem;">👁️</span>
+              <span style="font-size: 0.85rem; line-height: 1;">${card.symbol}</span>
+            </div>
+          `;
+        }
+
+        cardEl.innerHTML = `
+          ${eyeBadge}
+          <div class="card-top" style="line-height: 1;">
+            <span style="font-size: 0.85rem; font-weight: 800;">${card.rank}</span>
+            <span style="font-size: 0.75rem;">${card.symbol}</span>
+          </div>
+          ${centerHtml}
+          <div class="card-bottom" style="line-height: 1; transform: rotate(180deg); align-items: flex-end;">
+            <span style="font-size: 0.85rem; font-weight: 800;">${card.rank}</span>
+            <span style="font-size: 0.75rem;">${card.symbol}</span>
+          </div>
         `;
+        if (nameEl) nameEl.textContent = card.name;
       } else {
-        aiDiscardCard.className = 'discard-card';
-        aiDiscardCard.innerHTML = '<span style="font-size: 0.65rem; color: #94a3b8;">Empty</span>';
+        cardEl.className = 'discard-card empty-pile';
+        cardEl.innerHTML = '<span style="font-size: 0.65rem; color: #94a3b8;">Empty</span>';
+        if (nameEl) nameEl.textContent = 'None yet';
       }
-    }
+    };
+
+    updateDiscardDisplay(this.lastPlayerDiscard, playerDiscardCard, playerDiscardName);
+    updateDiscardDisplay(this.lastAiDiscard, aiDiscardCard, aiDiscardName);
 
     // Board Highlights
     let validMoves = [];
@@ -495,7 +537,6 @@ class SequenceGame {
       handTray.innerHTML = '';
       this.playerHand.forEach((cardCode, index) => {
         if (!cardCode) {
-          // Awaiting manual draw slot
           const emptySlot = document.createElement('div');
           emptySlot.className = 'empty-card-slot';
           emptySlot.innerHTML = '<span>🃏</span><span style="font-size: 0.7rem; margin-top: 4px;">CLICK TO DRAW</span>';
@@ -506,7 +547,7 @@ class SequenceGame {
 
         const card = parseCard(cardCode);
         const cardEl = document.createElement('div');
-        cardEl.className = `player-card suit-${card.color}`;
+        cardEl.className = `player-card ${card.color === 'red' ? 'suit-red' : 'suit-black'}`;
         if (this.selectedCardIndex === index) {
           cardEl.classList.add('selected');
         }
@@ -520,12 +561,37 @@ class SequenceGame {
         }
 
         let badgeHtml = '';
-        if (this.lastDrawnSlot === index) {
-          badgeHtml = '<div class="card-badge badge-new">NEW</div>';
-        } else if (card.isTwoEyed) {
-          badgeHtml = '<div class="card-badge badge-wild">WILD</div>';
+        let centerContent = `<div class="card-center-icon">${card.symbol}</div>`;
+        let bottomPip = `<span class="suit">${card.symbol}</span>`;
+
+        if (card.isTwoEyed) {
+          cardEl.classList.add('is-two-eyed');
+          cardEl.title = `👀 Two-Eyed Jack of ${card.suitName} — WILD: Place on ANY empty square!`;
+          badgeHtml = '<div class="card-badge badge-wild">👀 2-EYED WILD</div>';
+          centerContent = `
+            <div class="jack-center-content">
+              <span class="jack-eyes-icon">👀</span>
+              <span style="font-size: 1.25rem; line-height: 1;">${card.symbol}</span>
+              <span class="jack-ability-text wild">WILD</span>
+            </div>
+          `;
+          bottomPip = '<span class="suit" style="font-size: 0.8rem;">👀</span>';
         } else if (card.isOneEyed) {
-          badgeHtml = '<div class="card-badge badge-remove">REMOVE</div>';
+          cardEl.classList.add('is-one-eyed');
+          cardEl.title = `👁️ One-Eyed Jack of ${card.suitName} — REMOVAL: Clear any opponent chip!`;
+          badgeHtml = '<div class="card-badge badge-remove">👁️ 1-EYED REMOVE</div>';
+          centerContent = `
+            <div class="jack-center-content">
+              <span class="jack-eyes-icon">👁️</span>
+              <span style="font-size: 1.25rem; line-height: 1;">${card.symbol}</span>
+              <span class="jack-ability-text remove">REMOVE</span>
+            </div>
+          `;
+          bottomPip = '<span class="suit" style="font-size: 0.8rem;">👁️</span>';
+        }
+
+        if (this.lastDrawnSlot === index) {
+          badgeHtml = '<div class="card-badge badge-new">NEW ★</div>';
         } else if (isDead) {
           badgeHtml = '<div class="card-badge badge-dead" title="Both spots filled! Click to swap.">DEAD ↺</div>';
         }
@@ -536,10 +602,10 @@ class SequenceGame {
             <span class="rank">${card.rank}</span>
             <span class="suit">${card.symbol}</span>
           </div>
-          <div class="card-center-icon">${card.symbol}</div>
+          ${centerContent}
           <div class="card-bottom">
             <span class="rank">${card.rank}</span>
-            <span class="suit">${card.symbol}</span>
+            ${bottomPip}
           </div>
         `;
 

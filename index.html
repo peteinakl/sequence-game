@@ -65,20 +65,23 @@
         </div>
         <div class="deck-area">
           <div class="deck-pile">
-            <div id="playerDiscardCard" class="discard-card">
+            <div id="playerDiscardCard" class="discard-card empty-pile">
               <span style="font-size: 0.65rem; color: #94a3b8;">Empty</span>
             </div>
             <span class="pile-label blue">Your Discard</span>
+            <div id="playerDiscardName" class="discard-name-label blue">None yet</div>
           </div>
           <div class="deck-pile">
             <div id="drawDeckCard" class="card-back" title="Click to draw next card"></div>
             <span class="pile-label">Draw Deck</span>
+            <div style="font-size: 0.68rem; color: #94a3b8; margin-top: 3px;">Pile</div>
           </div>
           <div class="deck-pile">
-            <div id="aiDiscardCard" class="discard-card">
+            <div id="aiDiscardCard" class="discard-card empty-pile">
               <span style="font-size: 0.65rem; color: #94a3b8;">Empty</span>
             </div>
             <span class="pile-label red">AI Discard</span>
+            <div id="aiDiscardName" class="discard-name-label red">None yet</div>
           </div>
         </div>
       </div>
@@ -96,9 +99,22 @@
     <div class="hand-header">
       <div class="hand-title">
         <span>🃏 Your Hand (Blue Tokens)</span>
-        <span style="font-size: 0.75rem; color: #94a3b8; font-weight: normal;">Click a card to highlight valid board placements</span>
+        <span style="font-size: 0.75rem; color: #94a3b8; font-weight: normal;">Click a card to play, then draw next card</span>
+      </div>
+
+      <!-- Persistent Jacks Guide Legend -->
+      <div class="jack-legend-bar">
+        <span class="jack-legend-item two-eyed" title="Jack of Clubs or Jack of Diamonds">👀 2-Eyed (♣♦): WILD (Place Anywhere)</span>
+        <span class="jack-legend-item one-eyed" title="Jack of Spades or Jack of Hearts">👁️ 1-Eyed (♠♥): REMOVE (Clear Opponent)</span>
       </div>
     </div>
+
+    <!-- Live Discard & Draw Status Feedback -->
+    <div id="moveFeedbackBar" class="action-feedback-bar" style="display: none;">
+      <span id="feedbackDiscard"></span>
+      <span id="feedbackDraw"></span>
+    </div>
+
     <div id="handTray" class="hand-tray"></div>
   </footer>
 
