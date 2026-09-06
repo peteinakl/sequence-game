@@ -197,6 +197,18 @@ const SoundEngine = (() => {
       playDiscoStab([392.00, 493.88, 587.33, 659.25, 783.99], 1.12, 0.45);
     },
 
+    playTone(freq, type = 'sine', duration = 0.15, startTime = 0, gainVal = 0.15) {
+      playTone(freq, type, duration, startTime, gainVal);
+    },
+
+    defeat() {
+      initCtx();
+      if (muted) return;
+      playTone(392.00, 'triangle', 0.25, 0, 0.2);
+      playTone(349.23, 'triangle', 0.25, 0.2, 0.2);
+      playTone(329.63, 'triangle', 0.45, 0.4, 0.25);
+    },
+
     sequenceFormed() {
       this.playGoodTimesRiff();
     },
@@ -878,8 +890,7 @@ class SequenceGame {
     } else {
       this.aiSequences = Array.from({ length: this.targetSequences }, (_, i) => ({ id: `sim-${i}` }));
       StorageManager.recordLoss();
-      SoundEngine.playTone(392, 'triangle', 0.35, 0, 0.25);
-      SoundEngine.playTone(330, 'triangle', 0.45, 0.15, 0.25);
+      SoundEngine.defeat();
       this.showCompanion("Good match! Care for a rematch? 🍀");
       this.log(`🍀 [TEST SIMULATION] Lucky formed ${this.targetSequences} sequence(s) and won!`, 'ai');
     }
@@ -950,24 +961,24 @@ class SequenceGame {
         statusText.innerHTML = '<span class="pulse-dot"></span> <b>Card Discarded!</b> Click the Draw Deck (or slot in hand) to draw your next card.';
       } else if (this.isAiThinking) {
         turnBanner.className = 'turn-banner ai-turn';
-        statusText.innerHTML = '<span class="pulse-dot"></span> Machine is contemplating move...';
+        statusText.innerHTML = '<span class="pulse-dot"></span> <b>Lucky is thinking...</b>';
       } else if (this.currentTurn === 'player') {
         turnBanner.className = 'turn-banner player-turn';
         if (this.selectedCardIndex !== null && this.playerHand[this.selectedCardIndex]) {
           const card = parseCard(this.playerHand[this.selectedCardIndex]);
           if (card.isTwoEyed) {
-            statusText.innerHTML = '<span class="pulse-dot"></span> <b>Two-Eyed Jack Selected:</b> Click ANY open square to place!';
+            statusText.innerHTML = '<span class="pulse-dot"></span> <b>TWO-EYED JACK:</b> Click ANY empty square on the board!';
           } else if (card.isOneEyed) {
-            statusText.innerHTML = '<span class="pulse-dot"></span> <b>One-Eyed Jack Selected:</b> Click any RED chip to remove!';
+            statusText.innerHTML = '<span class="pulse-dot"></span> <b>ONE-EYED JACK:</b> Click any RED chip to remove!';
           } else {
-            statusText.innerHTML = `<span class="pulse-dot"></span> Selected <b>${card.name}</b>. Click highlighted space on board.`;
+            statusText.innerHTML = `<span class="pulse-dot"></span> Selected <b>${card.name}</b> — Click a highlighted square on board.`;
           }
         } else {
-          statusText.innerHTML = '<span class="pulse-dot"></span> Your Turn: Select a card from your hand below.';
+          statusText.innerHTML = '<span class="pulse-dot"></span> <b>YOUR TURN:</b> Select a card from your hand below.';
         }
       } else {
         turnBanner.className = 'turn-banner ai-turn';
-        statusText.innerHTML = '<span class="pulse-dot"></span> Machine turn';
+        statusText.innerHTML = '<span class="pulse-dot"></span> <b>Lucky\'s Turn</b>';
       }
     }
 
