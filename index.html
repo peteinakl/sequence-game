@@ -21,16 +21,18 @@
     </div>
 
     <div class="scoreboard">
-      <div class="score-pill">
+      <div class="score-pill" title="Total Games Won by You">
         <span class="chip-icon blue"></span>
         <span class="score-label">You:</span>
         <span id="playerScore" class="count">0</span>
+        <span id="playerRoundSeq" class="round-seq-pill" style="display: none;">(0/2)</span>
       </div>
       <div style="color: #475569; font-weight: bold; font-size: 0.75rem;">VS</div>
-      <div class="score-pill">
+      <div class="score-pill" title="Total Games Won by Lucky">
         <span class="chip-icon red"></span>
         <span class="score-label">Lucky:</span>
         <span id="aiScore" class="count">0</span>
+        <span id="aiRoundSeq" class="round-seq-pill" style="display: none;">(0/2)</span>
       </div>
       <div class="streak-pill" id="streakPill" title="Current Win Streak">🔥 <span id="streakCount">0</span></div>
       <div class="streak-pill play-pill" id="playCountPill" title="Total Matches Played Across Visits">🎮 <span id="headerPlayCount">1</span></div>
@@ -61,7 +63,7 @@
     <div id="statusText" class="status-msg">
       <span class="pulse-dot"></span> Your Turn: Tap a card or board square to play.
     </div>
-    <div class="turn-sub-guide">5-in-a-row to form Sequence</div>
+    <div id="turnSubGuide" class="turn-sub-guide">5-in-a-row to form Sequence</div>
   </div>
 
   <!-- Main Game Layout: Board + Hand on Left, Side Panel on Right -->
@@ -221,7 +223,11 @@
           </div>
           <div class="stat-card">
             <div id="statWins" class="stat-val">0</div>
-            <div class="stat-label">Matches Won</div>
+            <div class="stat-label">You Won</div>
+          </div>
+          <div class="stat-card">
+            <div id="statLosses" class="stat-val">0</div>
+            <div class="stat-label">Lucky Won</div>
           </div>
           <div class="stat-card">
             <div id="statStreak" class="stat-val">0</div>

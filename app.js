@@ -990,9 +990,34 @@ class SequenceGame {
     const aiDiscardCard = document.getElementById('aiDiscardCard');
     const drawDeckCard = document.getElementById('drawDeckCard');
 
-    if (pScore) pScore.textContent = this.playerSequences.length;
-    if (aScore) aScore.textContent = this.aiSequences.length;
-    if (goalBtn) goalBtn.textContent = `Goal: ${this.targetSequences} Seq`;
+    const stats = StorageManager.getStats();
+
+    // Prominent Match Win Tally: You (Player Wins) vs Lucky (Machine Wins)
+    if (pScore) pScore.textContent = stats.wins;
+    if (aScore) aScore.textContent = stats.losses;
+
+    // In-round sequence badges (visible when targetSequences > 1)
+    const playerRoundSeq = document.getElementById('playerRoundSeq');
+    const aiRoundSeq = document.getElementById('aiRoundSeq');
+    if (playerRoundSeq && aiRoundSeq) {
+      if (this.targetSequences > 1) {
+        playerRoundSeq.style.display = 'inline-block';
+        playerRoundSeq.textContent = `(${this.playerSequences.length}/${this.targetSequences})`;
+        aiRoundSeq.style.display = 'inline-block';
+        aiRoundSeq.textContent = `(${this.aiSequences.length}/${this.targetSequences})`;
+      } else {
+        playerRoundSeq.style.display = 'none';
+        aiRoundSeq.style.display = 'none';
+      }
+    }
+
+    if (goalBtn) {
+      if (this.targetSequences > 1) {
+        goalBtn.textContent = `Goal: ${this.targetSequences} Seq (${this.playerSequences.length}-${this.aiSequences.length})`;
+      } else {
+        goalBtn.textContent = `Goal: 1 Seq`;
+      }
+    }
     if (drawModeBtn) {
       const textSpan = drawModeBtn.querySelector('.btn-text');
       if (textSpan) {
@@ -1005,10 +1030,16 @@ class SequenceGame {
 
     const streakCount = document.getElementById('streakCount');
     const headerPlayCount = document.getElementById('headerPlayCount');
-    if (streakCount || headerPlayCount) {
-      const stats = StorageManager.getStats();
-      if (streakCount) streakCount.textContent = stats.currentStreak || 0;
-      if (headerPlayCount) headerPlayCount.textContent = stats.plays || 1;
+    if (streakCount) streakCount.textContent = stats.currentStreak || 0;
+    if (headerPlayCount) headerPlayCount.textContent = stats.plays || (stats.wins + stats.losses) || 1;
+
+    const turnSubGuide = document.getElementById('turnSubGuide');
+    if (turnSubGuide) {
+      if (this.targetSequences > 1) {
+        turnSubGuide.textContent = `First to 2 sequences wins • Round: You (${this.playerSequences.length}/2) - Lucky (${this.aiSequences.length}/2)`;
+      } else {
+        turnSubGuide.textContent = '5-in-a-row to form Sequence';
+      }
     }
 
     // Turn banner status
@@ -1377,10 +1408,12 @@ function initApp() {
     const stats = StorageManager.getStats();
     const elPlays = document.getElementById('statPlays');
     const elWins = document.getElementById('statWins');
+    const elLosses = document.getElementById('statLosses');
     const elStreak = document.getElementById('statStreak');
     const elBest = document.getElementById('statBestStreak');
-    if (elPlays) elPlays.textContent = stats.plays || 1;
+    if (elPlays) elPlays.textContent = stats.plays || (stats.wins + stats.losses) || 1;
     if (elWins) elWins.textContent = stats.wins;
+    if (elLosses) elLosses.textContent = stats.losses;
     if (elStreak) elStreak.textContent = stats.currentStreak;
     if (elBest) elBest.textContent = stats.bestStreak;
   };
@@ -1503,6 +1536,11 @@ function initApp() {
       game.log("New game started! Good luck.", "system");
     });
   }
+
+  // Developer & Verification Helper: window.simulateWin('player') or window.simulateWin('ai')
+  window.simulateWin = (winner) => {
+    if (game) game.simulateWin(winner);
+  };
 }
 
 window.addEventListener('DOMContentLoaded', initApp);
