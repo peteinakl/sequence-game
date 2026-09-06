@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sequence - Single Player vs Machine</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Top Header Navigation & Scores -->
+  <header class="header-bar">
+    <div class="title-group">
+      <div class="logo-badge">SEQUENCE</div>
+      <h1 class="app-title">Classic Board Game</h1>
+    </div>
+
+    <div class="scoreboard">
+      <div class="score-pill">
+        <span class="chip-icon blue"></span>
+        <span>You:</span>
+        <span id="playerScore" class="count">0</span>
+      </div>
+      <div style="color: #475569; font-weight: bold;">VS</div>
+      <div class="score-pill">
+        <span class="chip-icon red"></span>
+        <span>Machine:</span>
+        <span id="aiScore" class="count">0</span>
+      </div>
+      <button id="goalToggleBtn" class="goal-toggle-btn" title="Click to toggle between 1 or 2 sequences to win">Goal: 1 Seq</button>
+    </div>
+
+    <div class="controls-group">
+      <button id="drawModeBtn" class="btn" title="Toggle between automatic card draw or manually clicking the deck">🎴 Draw: Auto</button>
+      <button id="muteBtn" class="btn">🔊 Sound</button>
+      <button id="rulesBtn" class="btn">📖 Rules</button>
+      <button id="restartBtn" class="btn btn-primary">↻ New Game</button>
+    </div>
+  </header>
+
+  <!-- Turn & Guidance Banner -->
+  <div id="turnBanner" class="turn-banner player-turn">
+    <div id="statusText" class="status-msg">
+      <span class="pulse-dot"></span> Your Turn: Select a card from your hand below.
+    </div>
+    <div style="font-size: 0.8rem; color: #94a3b8;">5-in-a-row to form a Sequence</div>
+  </div>
+
+  <!-- Main Game Layout: Board + Side Panel -->
+  <main class="main-container">
+    <!-- Board -->
+    <section class="board-wrapper">
+      <div class="board-felt-container">
+        <div id="boardGrid" class="board-grid"></div>
+      </div>
+    </section>
+
+    <!-- Side Deck & Activity Logs -->
+    <aside class="side-panel">
+      <!-- Deck & Discard Card Box -->
+      <div class="card-box">
+        <div class="card-box-title">
+          <span>Card Piles</span>
+          <span id="deckCount" style="color: #60a5fa; font-weight: normal; font-size: 0.75rem;">104 left</span>
+        </div>
+        <div class="deck-area">
+          <div class="deck-pile">
+            <div id="playerDiscardCard" class="discard-card">
+              <span style="font-size: 0.65rem; color: #94a3b8;">Empty</span>
+            </div>
+            <span class="pile-label blue">Your Discard</span>
+          </div>
+          <div class="deck-pile">
+            <div id="drawDeckCard" class="card-back" title="Click to draw next card"></div>
+            <span class="pile-label">Draw Deck</span>
+          </div>
+          <div class="deck-pile">
+            <div id="aiDiscardCard" class="discard-card">
+              <span style="font-size: 0.65rem; color: #94a3b8;">Empty</span>
+            </div>
+            <span class="pile-label red">AI Discard</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Log -->
+      <div class="card-box log-box">
+        <div class="card-box-title">Game Activity</div>
+        <div id="logContent" class="log-content"></div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Player Hand Tray -->
+  <footer class="hand-section">
+    <div class="hand-header">
+      <div class="hand-title">
+        <span>🃏 Your Hand (Blue Tokens)</span>
+        <span style="font-size: 0.75rem; color: #94a3b8; font-weight: normal;">Click a card to highlight valid board placements</span>
+      </div>
+    </div>
+    <div id="handTray" class="hand-tray"></div>
+  </footer>
+
+  <!-- Rules & Help Modal -->
+  <div id="rulesModal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-title">
+        <span>How to Play Sequence</span>
+        <button id="closeRulesBtn" class="modal-close-btn">&times;</button>
+      </div>
+
+      <div class="rule-section">
+        <h3>🎯 Objective</h3>
+        <p>Form <b>lines of 5 tokens</b> horizontally, vertically, or diagonally on the 10x10 card board. Complete the required number of sequences (1 or 2, toggleable above) before the machine does!</p>
+      </div>
+
+      <div class="rule-section">
+        <h3>⭐ Wild Corner Spaces</h3>
+        <p>The 4 corner spaces (marked ★ FREE) are wild for all players. They act as already-placed bonus chips for both you and the machine, so you only need 4 of your own chips in a line connecting to a corner!</p>
+      </div>
+
+      <div class="rule-section">
+        <h3>🃏 Special Jacks</h3>
+        <div class="rule-bullet"><b>Two-Eyed Jacks (♣ Clubs &amp; ♦ Diamonds):</b> Completely WILD. Play one to place a chip on <i>any unoccupied space</i> on the entire board.</div>
+        <div class="rule-bullet"><b>One-Eyed Jacks (♠ Spades &amp; ♥ Hearts):</b> REMOVAL. Play one to <i>remove any opponent's chip</i> from the board!</div>
+        <div class="rule-bullet"><b>Protected Sequences:</b> Once a 5-in-a-row sequence is completed, its chips are locked (glowing gold with ★) and <i>cannot</i> be removed by One-Eyed Jacks.</div>
+      </div>
+
+      <div class="rule-section">
+        <h3>🔄 Dead Cards</h3>
+        <p>If both spaces on the board matching a card in your hand are already covered by chips, the card becomes <b>DEAD</b>. A dead card will display an orange badge; click it to discard and draw a replacement without losing your turn.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Victory / Game Over Overlay -->
+  <div id="victoryOverlay" class="victory-overlay">
+    <div class="victory-box">
+      <div id="victoryTitle" class="victory-title player">🏆 Victory!</div>
+      <p id="victorySubtitle" class="victory-subtitle">You connected 5 in a row and won the match!</p>
+      <button id="playAgainBtn" class="btn btn-primary" style="margin: 0 auto; padding: 10px 24px; font-size: 1rem;">Play Again</button>
+    </div>
+  </div>
+
+  <!-- Load Game Scripts -->
+  <script src="logic.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
