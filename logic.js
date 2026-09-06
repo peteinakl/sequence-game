@@ -259,22 +259,23 @@ function getBestAIMove(hand, boardState, aiColor = 'red') {
   const deadCards = [];
 
   hand.forEach((cardCode, index) => {
+    if (!cardCode) return;
     if (isDeadCard(cardCode, boardState)) {
       deadCards.push({ index, cardCode });
     } else {
       const moves = getValidMovesForCard(cardCode, boardState, aiColor);
       if (moves.length > 0) {
         playableCards.push({ index, cardCode, moves });
-      } else {
-        deadCards.push({ index, cardCode });
       }
     }
   });
 
+  // If AI holds any dead card, swap it for a fresh one
+  if (deadCards.length > 0) {
+    return { type: 'swap', index: deadCards[0].index, cardCode: deadCards[0].cardCode };
+  }
+
   if (playableCards.length === 0) {
-    if (deadCards.length > 0) {
-      return { type: 'swap', index: deadCards[0].index, cardCode: deadCards[0].cardCode };
-    }
     return null;
   }
 

@@ -790,30 +790,53 @@ class SequenceGame {
     this.triggerAiTurn();
   }
 
-  triggerAiTurn() {
+  triggerAiTurn(swapAttempts = 0) {
+    if (this.isGameOver) {
+      this.isAiThinking = false;
+      return;
+    }
+
     this.isAiThinking = true;
     this.render();
 
-    const thinkTime = this.isTurbo ? 140 : (550 + Math.floor(Math.random() * 250));
+    const thinkTime = this.isTurbo ? 120 : (500 + Math.floor(Math.random() * 200));
     setTimeout(() => {
-      if (this.isGameOver) return;
-      const aiDecision = getBestAIMove(this.aiHand, this.boardState, 'red');
+      try {
+        if (this.isGameOver) {
+          this.isAiThinking = false;
+          return;
+        }
 
-      this.isAiThinking = false;
+        const aiDecision = getBestAIMove(this.aiHand, this.boardState, 'red');
+        this.isAiThinking = false;
 
-      if (!aiDecision) {
-        this.log("Lucky had no playable moves and passed turn.", "ai");
+        if (!aiDecision) {
+          this.log("Lucky had no playable moves and passed turn.", "ai");
+          this.currentTurn = 'player';
+          StorageManager.saveMatch(this);
+          this.render();
+          return;
+        }
+
+        if (aiDecision.type === 'swap') {
+          if (swapAttempts >= 7) {
+            this.log("Lucky finished card adjustments.", "ai");
+            this.currentTurn = 'player';
+            StorageManager.saveMatch(this);
+            this.render();
+            return;
+          }
+          this.swapDeadCard('ai', aiDecision.index);
+          setTimeout(() => this.triggerAiTurn(swapAttempts + 1), this.isTurbo ? 100 : 300);
+        } else if (aiDecision.type === 'play') {
+          this.executeMove('ai', aiDecision.index, aiDecision.move);
+        }
+      } catch (err) {
+        console.error("AI turn exception handled:", err);
+        this.isAiThinking = false;
         this.currentTurn = 'player';
         StorageManager.saveMatch(this);
         this.render();
-        return;
-      }
-
-      if (aiDecision.type === 'swap') {
-        this.swapDeadCard('ai', aiDecision.index);
-        setTimeout(() => this.triggerAiTurn(), this.isTurbo ? 100 : 350);
-      } else if (aiDecision.type === 'play') {
-        this.executeMove('ai', aiDecision.index, aiDecision.move);
       }
     }, thinkTime);
   }
@@ -856,6 +879,7 @@ class SequenceGame {
       title.className = 'victory-title ai';
       subtitle.innerHTML = `Lucky formed ${this.targetSequences} sequence${this.targetSequences > 1 ? 's' : ''}. Better luck next round!<br><span style="display:inline-block; margin-top:10px; color:#64748b; font-weight:600;">Total Lifetime Wins: ${stats.wins}</span>`;
     }
+    overlay.style.display = 'flex';
     overlay.classList.add('open');
   }
 
@@ -1194,6 +1218,9 @@ function initApp() {
 
   game = new SequenceGame();
   game.render();
+  if (game.currentTurn === 'ai' && !game.isGameOver) {
+    setTimeout(() => game.triggerAiTurn(), 350);
+  }
   game.log("Welcome to Sequence! You play Blue, Lucky plays Red.", "system");
   game.log("Rule: When a card is played, it is discarded and you draw the next card from the deck!", "system");
   game.log("Click any card in your hand to highlight playable board squares.", "system");
@@ -1261,11 +1288,15 @@ function initApp() {
   if (settingsBtn && settingsModal) {
     settingsBtn.addEventListener('click', () => {
       updateStatsDisplay();
+      settingsModal.style.display = 'flex';
       settingsModal.classList.add('open');
     });
   }
   if (closeSettingsBtn && settingsModal) {
-    closeSettingsBtn.addEventListener('click', () => settingsModal.classList.remove('open'));
+    closeSettingsBtn.addEventListener('click', () => {
+      settingsModal.style.display = 'none';
+      settingsModal.classList.remove('open');
+    });
   }
 
   // Theme selector buttons
@@ -1346,16 +1377,23 @@ function initApp() {
   const rulesModal = document.getElementById('rulesModal');
   const closeRulesBtn = document.getElementById('closeRulesBtn');
   if (rulesBtn && rulesModal) {
-    rulesBtn.addEventListener('click', () => rulesModal.classList.add('open'));
+    rulesBtn.addEventListener('click', () => {
+      rulesModal.style.display = 'flex';
+      rulesModal.classList.add('open');
+    });
   }
   if (closeRulesBtn && rulesModal) {
-    closeRulesBtn.addEventListener('click', () => rulesModal.classList.remove('open'));
+    closeRulesBtn.addEventListener('click', () => {
+      rulesModal.style.display = 'none';
+      rulesModal.classList.remove('open');
+    });
   }
 
   const playAgainBtn = document.getElementById('playAgainBtn');
   const victoryOverlay = document.getElementById('victoryOverlay');
   if (playAgainBtn && victoryOverlay) {
     playAgainBtn.addEventListener('click', () => {
+      victoryOverlay.style.display = 'none';
       victoryOverlay.classList.remove('open');
       StorageManager.clearMatch();
       game = new SequenceGame(true);
