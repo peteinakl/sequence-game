@@ -33,6 +33,7 @@
         <span id="aiScore" class="count">0</span>
       </div>
       <div class="streak-pill" id="streakPill" title="Current Win Streak">🔥 <span id="streakCount">0</span></div>
+      <div class="streak-pill play-pill" id="playCountPill" title="Total Matches Played Across Visits">🎮 <span id="headerPlayCount">1</span></div>
       <button id="goalToggleBtn" class="goal-toggle-btn" title="Click to toggle between 1 or 2 sequences to win">Goal: 1 Seq</button>
     </div>
 
@@ -67,15 +68,6 @@
   <main class="main-container">
     <!-- Primary Area: Gameboard + Hand directly beneath -->
     <div class="game-area">
-      <!-- Friendly Companion Reaction Bar -->
-      <div class="companion-bar" id="companionBar">
-        <div class="companion-avatar" title="Lucky, your friendly companion">🍀</div>
-        <div class="companion-bubble">
-          <span class="companion-name">Lucky</span>
-          <span id="companionMsg" class="companion-msg">"Good luck! Let's have a great match."</span>
-        </div>
-      </div>
-
       <!-- Board -->
       <section class="board-wrapper">
         <div class="board-felt-container">
@@ -223,6 +215,10 @@
       <div class="settings-group">
         <div class="settings-label">🏆 Lifetime Statistics</div>
         <div class="stats-grid">
+          <div class="stat-card">
+            <div id="statPlays" class="stat-val">1</div>
+            <div class="stat-label">Matches Played</div>
+          </div>
           <div class="stat-card">
             <div id="statWins" class="stat-val">0</div>
             <div class="stat-label">Matches Won</div>

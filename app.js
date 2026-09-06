@@ -369,10 +369,44 @@ const StorageManager = (() => {
     getStats() {
       try {
         const raw = localStorage.getItem(KEYS.STATS);
-        return raw ? JSON.parse(raw) : { wins: 0, losses: 0, currentStreak: 0, bestStreak: 0, sequences: 0 };
+        const defaults = { plays: 1, wins: 0, losses: 0, currentStreak: 0, bestStreak: 0, sequences: 0 };
+        if (!raw) {
+          localStorage.setItem(KEYS.STATS, JSON.stringify(defaults));
+          return defaults;
+        }
+        const p = JSON.parse(raw);
+        const wins = Number(p.wins) || 0;
+        const losses = Number(p.losses) || 0;
+        let plays = Number(p.plays);
+        if (isNaN(plays) || plays < 1) {
+          plays = Math.max(1, wins + losses);
+        }
+        return {
+          plays,
+          wins,
+          losses,
+          currentStreak: Number(p.currentStreak) || 0,
+          bestStreak: Number(p.bestStreak) || 0,
+          sequences: Number(p.sequences) || 0
+        };
       } catch (e) {
-        return { wins: 0, losses: 0, currentStreak: 0, bestStreak: 0, sequences: 0 };
+        return { plays: 1, wins: 0, losses: 0, currentStreak: 0, bestStreak: 0, sequences: 0 };
       }
+    },
+
+    saveStats(stats) {
+      try {
+        localStorage.setItem(KEYS.STATS, JSON.stringify(stats));
+      } catch (e) {
+        console.warn("Could not save stats", e);
+      }
+    },
+
+    recordMatchStarted() {
+      const stats = this.getStats();
+      stats.plays += 1;
+      this.saveStats(stats);
+      return stats;
     },
 
     recordWin() {
@@ -382,7 +416,10 @@ const StorageManager = (() => {
       if (stats.currentStreak > stats.bestStreak) {
         stats.bestStreak = stats.currentStreak;
       }
-      localStorage.setItem(KEYS.STATS, JSON.stringify(stats));
+      if (stats.plays < stats.wins + stats.losses) {
+        stats.plays = stats.wins + stats.losses;
+      }
+      this.saveStats(stats);
       return stats;
     },
 
@@ -390,21 +427,41 @@ const StorageManager = (() => {
       const stats = this.getStats();
       stats.losses += 1;
       stats.currentStreak = 0;
-      localStorage.setItem(KEYS.STATS, JSON.stringify(stats));
+      if (stats.plays < stats.wins + stats.losses) {
+        stats.plays = stats.wins + stats.losses;
+      }
+      this.saveStats(stats);
       return stats;
     },
 
     recordSequence() {
       const stats = this.getStats();
       stats.sequences += 1;
-      localStorage.setItem(KEYS.STATS, JSON.stringify(stats));
+      this.saveStats(stats);
       return stats;
     },
 
     resetStats() {
-      const fresh = { wins: 0, losses: 0, currentStreak: 0, bestStreak: 0, sequences: 0 };
-      localStorage.setItem(KEYS.STATS, JSON.stringify(fresh));
+      const fresh = { plays: 1, wins: 0, losses: 0, currentStreak: 0, bestStreak: 0, sequences: 0 };
+      this.saveStats(fresh);
       return fresh;
+    },
+
+    recordVisit() {
+      try {
+        const stats = this.getStats();
+        if (!sessionStorage.getItem('sequence_session_active')) {
+          sessionStorage.setItem('sequence_session_active', '1');
+          const saved = this.loadMatch();
+          if (!saved && (stats.wins + stats.losses > 0)) {
+            stats.plays = Math.max(stats.plays + 1, stats.wins + stats.losses + 1);
+            this.saveStats(stats);
+          }
+        }
+        return stats;
+      } catch (e) {
+        return this.getStats();
+      }
     },
 
     getSettings() {
@@ -515,13 +572,7 @@ class SequenceGame {
   }
 
   showCompanion(text) {
-    const el = document.getElementById('companionMsg');
-    if (!el) return;
-    el.style.opacity = '0';
-    setTimeout(() => {
-      el.textContent = `"${text}"`;
-      el.style.opacity = '1';
-    }, 150);
+    // Machine feedback bar removed per user preference - safe no-op
   }
 
   dealInitialHands() {
@@ -946,9 +997,11 @@ class SequenceGame {
     if (deckCount) deckCount.textContent = `${this.deck.length} left`;
 
     const streakCount = document.getElementById('streakCount');
-    if (streakCount) {
+    const headerPlayCount = document.getElementById('headerPlayCount');
+    if (streakCount || headerPlayCount) {
       const stats = StorageManager.getStats();
-      streakCount.textContent = stats.currentStreak || 0;
+      if (streakCount) streakCount.textContent = stats.currentStreak || 0;
+      if (headerPlayCount) headerPlayCount.textContent = stats.plays || 1;
     }
 
     // Turn banner status
@@ -1241,6 +1294,7 @@ let game = null;
 
 function initApp() {
   ConfettiEngine.init();
+  StorageManager.recordVisit();
 
   const settings = StorageManager.getSettings();
 
@@ -1267,11 +1321,11 @@ function initApp() {
     restartBtn.addEventListener('click', () => {
       if (confirm("Restart game with a fresh shuffle?")) {
         StorageManager.clearMatch();
+        StorageManager.recordMatchStarted();
         game = new SequenceGame(true);
         document.getElementById('logContent').innerHTML = '';
         game.render();
         game.log("Game restarted. Fresh 104-card deck dealt!", "system");
-        game.showCompanion("New match started! May the best player win 🍀");
       }
     });
   }
@@ -1314,9 +1368,11 @@ function initApp() {
 
   const updateStatsDisplay = () => {
     const stats = StorageManager.getStats();
+    const elPlays = document.getElementById('statPlays');
     const elWins = document.getElementById('statWins');
     const elStreak = document.getElementById('statStreak');
     const elBest = document.getElementById('statBestStreak');
+    if (elPlays) elPlays.textContent = stats.plays || 1;
     if (elWins) elWins.textContent = stats.wins;
     if (elStreak) elStreak.textContent = stats.currentStreak;
     if (elBest) elBest.textContent = stats.bestStreak;
@@ -1382,7 +1438,7 @@ function initApp() {
   if (resetStatsBtn) {
     resetStatsBtn.addEventListener('click', () => {
       if (confirm("Reset all lifetime win/streak statistics?")) {
-        StorageManager.saveStats({ wins: 0, losses: 0, currentStreak: 0, bestStreak: 0, sequencesFormed: 0 });
+        StorageManager.resetStats();
         updateStatsDisplay();
         if (game) game.render();
       }
@@ -1433,11 +1489,11 @@ function initApp() {
       victoryOverlay.style.display = 'none';
       victoryOverlay.classList.remove('open');
       StorageManager.clearMatch();
+      StorageManager.recordMatchStarted();
       game = new SequenceGame(true);
       document.getElementById('logContent').innerHTML = '';
       game.render();
       game.log("New game started! Good luck.", "system");
-      game.showCompanion("Here we go again! Let's see some good cards.");
     });
   }
 }

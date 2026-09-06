@@ -208,6 +208,24 @@ body.theme-dark .streak-pill {
   color: #fdba74;
 }
 
+.play-pill {
+  background: rgba(16, 185, 129, 0.12) !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+  color: #047857 !important;
+}
+
+body.theme-dark .play-pill {
+  background: rgba(16, 185, 129, 0.22) !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+  color: #6ee7b7 !important;
+}
+
+body.theme-classic .play-pill {
+  background: rgba(16, 185, 129, 0.25) !important;
+  border-color: rgba(16, 185, 129, 0.5) !important;
+  color: #a7f3d0 !important;
+}
+
 .goal-toggle-btn {
   background: var(--btn-bg);
   border: 1px solid var(--btn-border);
@@ -266,60 +284,6 @@ body.theme-dark .streak-pill {
 
 .btn-primary:hover {
   background: #1d4ed8 !important;
-}
-
-/* Friendly Companion Banner */
-.companion-bar {
-  width: 100%;
-  max-width: 1100px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--panel-bg);
-  border: 1px solid var(--panel-border);
-  box-shadow: var(--panel-shadow);
-  padding: 8px 14px;
-  border-radius: 10px;
-  margin-bottom: 8px;
-  transition: all 0.3s;
-}
-
-.companion-avatar {
-  font-size: 1.4rem;
-  line-height: 1;
-  flex-shrink: 0;
-  animation: bounceSlow 3s infinite;
-}
-
-@keyframes bounceSlow {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
-}
-
-.companion-bubble {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--text-main);
-  flex-wrap: wrap;
-}
-
-.companion-name {
-  font-weight: 700;
-  color: #059669;
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  background: rgba(16, 185, 129, 0.12);
-  padding: 1px 6px;
-  border-radius: 4px;
-}
-
-.companion-msg {
-  color: var(--text-main);
-  font-style: italic;
 }
 
 /* Fullscreen Confetti Canvas & Screen Shake */
@@ -1278,7 +1242,7 @@ body.theme-classic .turn-banner.ai-turn {
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
   gap: 10px;
   margin-top: 4px;
 }
